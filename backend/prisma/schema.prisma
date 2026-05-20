@@ -1,0 +1,170 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  isActive  Boolean  @default(true)
+  roleId    String?
+  role      Role?    @relation(fields: [roleId], references: [id])
+  incidents Incident[] @relation("AssignedIncidents")
+  activityLogs ActivityLog[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique // e.g., ADMIN, OPS_EXEC, SUPPORT_ENG, SALES, MANAGEMENT
+  permissions String? // Serialized JSON string for SQLite
+  users       User[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Customer {
+  id             String   @id @default(uuid())
+  companyName    String
+  contactPerson  String
+  phoneNumber    String
+  email          String
+  address        String?
+  city           String?
+  state          String?
+  gstNumber      String?
+  customerType   String?
+  status         String   @default("Active") // Active, Inactive, Archived
+  notes          String?
+  contacts       Contact[]
+  orders         Order[]
+  incidents      Incident[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Contact {
+  id          String   @id @default(uuid())
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  name        String
+  email       String?
+  phone       String?
+  designation String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Order {
+  id            String   @id @default(uuid())
+  orderNumber   String   @unique
+  customerId    String
+  customer      Customer @relation(fields: [customerId], references: [id])
+  orderDate     DateTime @default(now())
+  status        String   @default("Draft") // Draft, Confirmed, In Progress, Completed, Cancelled
+  paymentStatus String   @default("Pending") // Pending, Partially Paid, Paid, Overdue
+  notes         String?
+  createdById   String?
+  items         OrderItem[]
+  incidents     Incident[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model OrderItem {
+  id              String   @id @default(uuid())
+  orderId         String
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productName     String
+  productCode     String?
+  quantity        Int      @default(1)
+  serialNumber    String?  @unique
+  unitPrice       Float
+  amcEligible     Boolean  @default(true)
+  warrantyEndDate DateTime?
+  notes           String?
+  amcs            Amc[]
+  incidents       Incident[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Amc {
+  id              String    @id @default(uuid())
+  orderItemId     String
+  orderItem       OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  startDate       DateTime
+  endDate         DateTime
+  coverageType    String    // Full Coverage, Limited Coverage, Service Only, Parts Excluded
+  status          String    @default("Active") // Active, Expired, Renewed, Paused, Cancelled
+  slaType         String?
+  renewalStatus   String    @default("Renewal Pending")
+  notes           String?
+  incidents       Incident[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Incident {
+  id               String   @id @default(uuid())
+  customerId       String
+  customer         Customer @relation(fields: [customerId], references: [id])
+  orderId          String?
+  order            Order?   @relation(fields: [orderId], references: [id])
+  orderItemId      String?
+  orderItem        OrderItem? @relation(fields: [orderItemId], references: [id])
+  amcId            String?
+  amc              Amc?     @relation(fields: [amcId], references: [id])
+  incidentType     String   // Hardware Issue, Software Issue, etc.
+  severity         String   // Low, Medium, High, Critical
+  status           String   @default("Open") // Open, Assigned, In Progress, Waiting on Customer, Resolved, Closed, Reopened
+  description      String
+  assignedUserId   String?
+  assignedUser     User?    @relation("AssignedIncidents", fields: [assignedUserId], references: [id])
+  resolutionNotes  String?
+  coveredUnderAmc  Boolean  @default(false)
+  openedDate       DateTime @default(now())
+  closedDate       DateTime?
+  comments         IncidentComment[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model IncidentComment {
+  id          String   @id @default(uuid())
+  incidentId  String
+  incident    Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  userId      String?
+  comment     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ActivityLog {
+  id          String   @id @default(uuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  action      String   // Created, Updated, Deleted
+  entityType  String   // Customer, Order, Amc, Incident
+  entityId    String
+  oldValue    String?  // JSON stringified
+  newValue    String?  // JSON stringified
+  createdAt   DateTime @default(now())
+}
+
+model Report {
+  id           String   @id @default(uuid())
+  reportType   String   // CustomerService, AmcActivity, Incident
+  generatedBy  String?
+  fileUrl      String?
+  snapshotData String?  // JSON stringified
+  createdAt    DateTime @default(now())
+}

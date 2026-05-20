@@ -1,0 +1,8 @@
+node_modules
+.next
+dist
+dev.db
+*.db
+.env
+uploads/
+test-suite.js
