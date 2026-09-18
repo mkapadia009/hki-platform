@@ -14,4 +14,19 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const isLoginRequest = error.config?.url?.includes('/auth/login');
+    
+    if (error.response?.status === 401 && typeof window !== 'undefined' && !isLoginRequest) {
+      // Clear token and redirect to login if unauthorized (except for login requests themselves)
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('auth-storage'); // Zustand persistor if used
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;

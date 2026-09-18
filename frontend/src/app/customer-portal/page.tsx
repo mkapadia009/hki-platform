@@ -6,7 +6,7 @@ import api from '@/lib/api';
 import { Plus } from 'lucide-react';
 import { DataTable } from '@/components/ui/DataTable';
 
-export default function IncidentsPage() {
+export default function CustomerDashboardPage() {
   const [incidents, setIncidents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -16,7 +16,6 @@ export default function IncidentsPage() {
   }, []);
 
   const fetchIncidents = async () => {
-    setLoading(true);
     try {
       const res = await api.get('/incidents');
       setIncidents(res.data);
@@ -29,13 +28,17 @@ export default function IncidentsPage() {
 
   const columns = [
     { 
-      header: 'Customer', 
-      accessorKey: 'customer.companyName',
-      cell: (row: any) => row.customer?.companyName || '-'
-    },
-    { 
       header: 'Type', 
       accessorKey: 'incidentType'
+    },
+    { 
+      header: 'Status', 
+      accessorKey: 'status',
+      cell: (row: any) => (
+        <span className="px-2 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+          {row.status}
+        </span>
+      )
     },
     { 
       header: 'Severity', 
@@ -52,12 +55,14 @@ export default function IncidentsPage() {
       }
     },
     { 
-      header: 'Status', 
-      accessorKey: 'status',
-      cell: (row: any) => {
-        const color = row.status === 'Open' ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-gray-100 text-gray-800 border-gray-200';
-        return <span className={`px-2 py-1 rounded-full text-xs font-semibold border ${color}`}>{row.status}</span>;
-      }
+      header: 'Product / AMC', 
+      accessorKey: 'orderItem.productName',
+      cell: (row: any) => (
+        <span className="text-gray-600 dark:text-gray-300">
+          {row.orderItem ? row.orderItem.productName : '-'}
+          {row.amc && <span className="ml-2 px-1.5 py-0.5 bg-green-50 text-green-700 text-[10px] rounded border border-green-200">AMC</span>}
+        </span>
+      )
     },
     { 
       header: 'Opened Date', 
@@ -70,15 +75,14 @@ export default function IncidentsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Incidents</h1>
-          <p className="text-sm text-gray-500">Manage customer support tickets.</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Incidents</h1>
+          <p className="text-sm text-gray-500 mt-1">View and track your support tickets.</p>
         </div>
         <button 
-          onClick={() => router.push('/incidents/new')}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-colors"
+          onClick={() => router.push('/customer-portal/incidents/new')}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors md:hidden"
         >
-          <Plus size={20} />
-          <span className="font-medium">Raise Incident</span>
+          <Plus size={16} /> Raise Incident
         </button>
       </div>
 
@@ -88,9 +92,9 @@ export default function IncidentsPage() {
         <DataTable 
           columns={columns} 
           data={incidents} 
-          onRowClick={(row) => router.push(`/incidents/${row.id}`)}
+          onRowClick={(row) => router.push(`/customer-portal/incidents/${row.id}`)}
           defaultSort={{ key: 'openedDate', direction: 'desc' }}
-          searchPlaceholder="Search incidents..."
+          searchPlaceholder="Search your incidents..."
         />
       )}
     </div>

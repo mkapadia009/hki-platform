@@ -10,18 +10,28 @@ import { Prisma } from '@prisma/client';
 export class IncidentsController {
   constructor(private readonly incidentsService: IncidentsService) {}
 
-  @Roles('ADMIN', 'OPS_EXEC', 'SUPPORT_ENG')
+  @Roles('ADMIN', 'OPS_EXEC', 'SUPPORT_ENG', 'CUSTOMER')
   @Post()
-  async create(@Body() createIncidentDto: Prisma.IncidentCreateInput) {
+  async create(@Body() createIncidentDto: Prisma.IncidentUncheckedCreateInput, @Request() req) {
+    if (req.user.role === 'CUSTOMER') {
+      createIncidentDto.customerId = req.user.customerId;
+    }
     return this.incidentsService.create(createIncidentDto);
   }
 
+  @Roles('ADMIN', 'OPS_EXEC', 'SUPPORT_ENG', 'CUSTOMER')
   @Get()
-  async findAll(@Query('status') status?: string) {
-    const where = status ? { status } : {};
+  async findAll(@Query('status') status?: string, @Request() req?: any) {
+    let where: any = status ? { status } : {};
+    
+    if (req?.user?.role === 'CUSTOMER') {
+      where.customerId = req.user.customerId;
+    }
+    
     return this.incidentsService.findAll({ where });
   }
 
+  @Roles('ADMIN', 'OPS_EXEC', 'SUPPORT_ENG', 'CUSTOMER')
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.incidentsService.findOne(id);
@@ -33,7 +43,7 @@ export class IncidentsController {
     return this.incidentsService.update(id, updateIncidentDto);
   }
 
-  @Roles('ADMIN', 'OPS_EXEC', 'SUPPORT_ENG')
+  @Roles('ADMIN', 'OPS_EXEC', 'SUPPORT_ENG', 'CUSTOMER')
   @Post(':id/comments')
   async addComment(@Param('id') id: string, @Body() body: { comment: string }, @Request() req) {
       return this.incidentsService.addComment(id, req.user.userId, body.comment);

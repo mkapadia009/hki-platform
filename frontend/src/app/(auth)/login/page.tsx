@@ -19,7 +19,12 @@ export default function LoginPage() {
     try {
       const response = await api.post('/auth/login', { email, password });
       login(response.data.user, response.data.access_token);
-      router.push('/dashboard');
+      
+      if (response.data.user.role === 'CUSTOMER') {
+        router.push('/customer-portal');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to login');
     }

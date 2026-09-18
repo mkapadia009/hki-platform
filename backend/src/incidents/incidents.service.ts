@@ -6,7 +6,7 @@ import { Prisma } from '@prisma/client';
 export class IncidentsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: Prisma.IncidentCreateInput) {
+  async create(data: Prisma.IncidentUncheckedCreateInput) {
     return this.prisma.incident.create({ data });
   }
 

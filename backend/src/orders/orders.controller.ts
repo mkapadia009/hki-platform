@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Put, Param, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, UseGuards, Query, Request } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -16,14 +16,21 @@ export class OrdersController {
     return this.ordersService.create(createOrderDto);
   }
 
+  @Roles('ADMIN', 'OPS_EXEC', 'CUSTOMER')
   @Get()
-  async findAll(@Query('search') search?: string) {
-    const where = search ? {
+  async findAll(@Query('search') search?: string, @Request() req?: any) {
+    let where: any = search ? {
         orderNumber: { contains: search }
     } : {};
+    
+    if (req?.user?.role === 'CUSTOMER') {
+      where.customerId = req.user.customerId;
+    }
+    
     return this.ordersService.findAll({ where });
   }
 
+  @Roles('ADMIN', 'OPS_EXEC', 'CUSTOMER')
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.ordersService.findOne(id);

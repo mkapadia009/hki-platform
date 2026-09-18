@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { Users, ShoppingCart, Activity, FileText, Settings, LogOut, LayoutDashboard, ShieldAlert, Search } from 'lucide-react';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -76,12 +77,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <main className="flex-1 ml-64 flex flex-col min-h-screen">
         {/* Header Bar */}
         <header className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-8 sticky top-0 z-10">
-          <div className="flex-1 max-w-2xl">
+          <div className="flex-1 max-w-2xl flex items-center gap-4">
             <form onSubmit={(e) => {
               e.preventDefault();
               const q = new FormData(e.currentTarget).get('q');
               if (q) router.push(`/search?q=${encodeURIComponent(q as string)}`);
-            }} className="relative">
+            }} className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input 
                 name="q"
@@ -90,6 +91,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </form>
+            <ThemeToggle />
           </div>
         </header>
 
