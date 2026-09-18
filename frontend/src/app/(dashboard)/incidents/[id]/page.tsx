@@ -13,7 +13,6 @@ export default function IncidentDetailPage() {
   const [incident, setIncident] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState('');
-  const { addToast } = useToast();
 
   const fetchIncident = () => {
     if (id) {
